@@ -1,0 +1,23 @@
+﻿This is a simplified snippet from a live working system which is used by engineers across the Bank for provisioning applications.
+
+
+
+Q1. Have a look around the project, though don't get too concerned with the actual implementations.
+    Does everything looks ok. If not, suggest improvements.
+
+
+
+
+
+
+
+
+
+Q2. The purpose of CSharpTemplate is to apply transformations to the selected app scaffold.
+    For example: rename the solution and the project files to the appication's new name,
+                 rename namespaces in the projects, apply other user-defined transformations.
+    DefaultIgnoreDirs defines what folders are to be ignored during the transformation. However the list is limited,
+    and does not meet requirements of all scaffolds.
+
+    You are tasked with making the list is configurable with the configurations to be supplied by each app scaffold.
+    Propose a solution.

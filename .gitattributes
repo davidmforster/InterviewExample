@@ -1,0 +1,8 @@
+*.approved.* binary
+UniverseWeb.config binary
+
+*.cs     diff=csharp
+*.sln    merge=union
+*.csproj merge=union
+*.xml    eol=crlf
+*.config eol=crlf
