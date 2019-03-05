@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{89F13FB5-2E99-433E-B325-7F5A2F72EAB8}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>InterviewExample</RootNamespace>
+    <RootNamespace>CommBank.Api.Provisioning.Services</RootNamespace>
     <AssemblyName>InterviewExample</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -46,6 +46,8 @@
     <Compile Include="CSharpTemplate.cs" />
     <Compile Include="DirectoryInfoExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SlipstreamIgnoreFileLoader.cs" />
+    <Compile Include="TemplateIgnoreContentProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

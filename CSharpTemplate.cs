@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,14 +8,13 @@ namespace CommBank.Api.Provisioning.Services.Source.Templates
 {
     public class CSharpTemplate : ISourceTemplate
     {
-        private static readonly string[] DefaultIgnoreDirs = { ".git", "node_modules", "bower_components", "packages", "bin", "obj" };
-
         private readonly string _name;
         private readonly string _repositoryUrl;
         private readonly string _solutionName;
         private readonly string _branchName;
         private readonly IDictionary<string, string> _templatedValues;
         private readonly string[] _ignoreDirs;
+        private readonly ITemplateIgnoreContentProvider _templateIgnoreContentProvider = new TemplateIgnoreContentProvider(new SlipstreamIgnoreFileLoader());
 
         public string Name
         {
@@ -44,26 +43,18 @@ namespace CommBank.Api.Provisioning.Services.Source.Templates
 
 
         public CSharpTemplate(string name, string repositoryUrl, string solutionName, string branchName)
-            : this(name, repositoryUrl, solutionName, branchName, new Dictionary<string, string>(), DefaultIgnoreDirs)
+            : this(name, repositoryUrl, solutionName, branchName, new Dictionary<string, string>())
         {
 
         }
 
         public CSharpTemplate(string name, string repositoryUrl, string solutionName, string branchName, IDictionary<string, string> templatedValues)
-            : this(name, repositoryUrl, solutionName, branchName, templatedValues, DefaultIgnoreDirs)
-        {
-
-        }
-
-        public CSharpTemplate(string name, string repositoryUrl, string solutionName, string branchName,
-            IDictionary<string, string> templatedValues, IEnumerable<string> ignoreDirs)
         {
             _name = name;
             _repositoryUrl = repositoryUrl;
             _solutionName = solutionName;
             _branchName = branchName;
             _templatedValues = templatedValues;
-            _ignoreDirs = ignoreDirs.ToArray();
         }
 
         public void Apply(string workingDirectoryPath, string newSolutionName, string templateSolutionName, IDictionary<string, string> newTemplatedValues)
@@ -71,8 +62,8 @@ namespace CommBank.Api.Provisioning.Services.Source.Templates
             var templateSolnName = templateSolutionName ?? SolutionName;
             templateSolnName = templateSolnName.ToLower();
 
-            RenameGitFoldersAndFiles(workingDirectoryPath, templateSolnName, newSolutionName);
-            RenameGitFoldersAndFiles(workingDirectoryPath, newTemplatedValues);
+            RenameGitFoldersAndFiles(workingDirectoryPath, _templateIgnoreContentProvider.Get(workingDirectoryPath).ToList(), templateSolnName, newSolutionName);
+            RenameGitFoldersAndFiles(workingDirectoryPath, _templateIgnoreContentProvider.Get(workingDirectoryPath).ToList(), newTemplatedValues);
 
             var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -85,21 +76,21 @@ namespace CommBank.Api.Provisioning.Services.Source.Templates
                 replacements.Add(replacement.Key, replacement.Value);
             }
 
-            FindReplaceInFile(workingDirectoryPath, replacements);
+            FindReplaceInFile(workingDirectoryPath, _templateIgnoreContentProvider.Get(workingDirectoryPath).ToList(), replacements);
         }
 
-        private void RenameGitFoldersAndFiles(string workingDirectoryPath, IDictionary<string, string> templatedValues)
+        private void RenameGitFoldersAndFiles(string workingDirectoryPath, IList<string> templateIgnores, IDictionary<string, string> templatedValues)
         {
             if (templatedValues != null)
             {
                 foreach (var item in templatedValues)
                 {
-                    RenameGitFoldersAndFiles(workingDirectoryPath, item.Key, item.Value);
+                    RenameGitFoldersAndFiles(workingDirectoryPath, templateIgnores, item.Key, item.Value);
                 }
             }
         }
 
-        private void RenameGitFoldersAndFiles(string workingDirectoryPath, string oldName, string newSolutionName)
+        private void RenameGitFoldersAndFiles(string workingDirectoryPath, IList<string> templateIgnores, string oldName, string newSolutionName)
         {
             var workingDir = new DirectoryInfo(workingDirectoryPath);
 
@@ -127,7 +118,7 @@ namespace CommBank.Api.Provisioning.Services.Source.Templates
             return Enumerable.Empty<Guid>();
         }
 
-        private void FindReplaceInFile(string workingDirectoryPath, IDictionary<string, string> replacements)
+        private void FindReplaceInFile(string workingDirectoryPath, IList<string> templateIgnores, IDictionary<string, string> replacements)
         {
             var workingDirectory = new DirectoryInfo(workingDirectoryPath);
             var files = workingDirectory.EnumerateFiles("*.*", _ignoreDirs)
